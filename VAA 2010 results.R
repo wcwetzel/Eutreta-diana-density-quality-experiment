@@ -7,6 +7,7 @@
 # load data, entered gall numbers on map dataframe
 d = read.csv('/Users/will/Documents/DATA/2011 DATA/field/VAA map.csv')
 
+library(ggplot2)
 library(lattice)
 library(rgl)
 library(fields)
@@ -14,8 +15,33 @@ library(scatterplot3d)
 library(bbmle)
 
 
-plot(galls2011 ~ I(females+ runif(30)), data=d)
-plot(galls2011 ~ I(natural.galls+ runif(30)), data=d)
+## first 2-dimensional plots
+# load someone's hack to allow suppression of top and right borders
+source("/Users/will/Documents/R/ggplot2/rnc_ggplot2_border_themes.r")
+
+# 1. plot number of galls in spring 2011 ~ number of females introduced in summer 2010
+p1 = ggplot(data = d, aes(x = females, y = galls2011)) +
+	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
+		size = 2.5) +
+	theme_bw() + 
+	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank(),
+		panel.border = theme_border(c('left', 'bottom')))
+# now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
+p1.smooth = p1 + stat_smooth(method = 'loess', colour='royalblue', span=1) 
+print(p1.smooth) # display the plot
+
+# 2. plot number of galls in spring 2011 ~ 
+#		number of naturally occuring, experimentally removed 2010 galls
+p2 = ggplot(data = d, aes(x = natural.galls, y = galls2011)) +
+	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
+		size = 2.5) +
+	theme_bw() + 
+	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank(),
+		panel.border = theme_border(c('left', 'bottom')))
+# now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
+p2.smooth = p2 + stat_smooth(method = 'loess', colour='royalblue', span=1)
+print(p2.smooth) # display the plot
+
 
 plot(galls2011[d$females>0 & d$shrubdying2011==0] ~ natural.galls[d$females>0 & d$shrubdying2011==0],
 	data=d)
