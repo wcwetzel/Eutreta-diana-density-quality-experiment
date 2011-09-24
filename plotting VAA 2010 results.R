@@ -1,3 +1,6 @@
+# /Users/will/Documents/Analysis repos/
+# Eutreta-diana-density-quality-experiment/plotting VAA 2010 results.R
+
 ###        plotting VAA 2010 results         ###
 ### density / host-plant quality experiment  ###
 
@@ -35,7 +38,9 @@ p1 = ggplot(data = d, aes(x = females, y = galls2011)) +
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p1.smooth = p1 + stat_smooth(method = 'loess', colour='royalblue', span=1) 
-print(p1.smooth) # display the plot
+pdf('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~females.pdf')
+print(p1.smooth)
+dev.off()
 
 # 2. plot number of galls in spring 2011 ~ 
 #		number of naturally occuring, experimentally removed 2010 galls
@@ -47,7 +52,9 @@ p2 = ggplot(data = d, aes(x = natural.galls, y = galls2011)) +
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p2.smooth = p2 + stat_smooth(method = 'loess', colour='royalblue', span=1)
-print(p2.smooth) # display the plot
+
+# save plot as a pdf
+ggsave('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~naturalgalls2.pdf', plot = p2.smooth, width=4, height=4)
 
 # 3. plot number of galls in spring 2011 ~ time corrected water potential
 #		d$psi.r is residuals of linear regression psi ~ time
@@ -60,14 +67,16 @@ p3 = ggplot(data = d, aes(x = psi.r, y = galls2011)) +
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p3.smooth = p3 + stat_smooth(method = 'loess', colour='royalblue', span=1)
-print(p3.smooth) # display the plot
-
+pdf('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~rpsi.pdf')
+print(p3.smooth)
+dev.off()
 
 ## second 3-d plots
 
 # 1. plot galls on plants in spring 2011 ~ removed natural galls and introduced females
 # highlight.3d colors points in relation to y axis, the number of females
 # type='h' displays the height of each point
+pdf('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/3d-VAA2010.pdf')
 s3d1 = scatterplot3d(d$natural.galls, d$females, d$galls2011, pch=16, highlight.3d=TRUE, 
 	type='h', zlab = 'Galls in year t+1', ylab = 'Introduced females', 
 	xlab = 'Galls in year t')
@@ -75,8 +84,9 @@ s3d1 = scatterplot3d(d$natural.galls, d$females, d$galls2011, pch=16, highlight.
 fit.pois = mle2(galls2011 ~ dpois(lambda = a + b * natural.galls + c * females), 
 	start = list(a = mean(d$galls2011), b = 0, c = 0), method = 'SANN', data=d)
 s3d1$plane3d(fit.pois)
+dev.off()
 
-# interactive version of above plot
+# 2. interactive version of above plot
 plot3d(d$galls2011 ~ d$natural.galls + d$females, type='s', size=1, zlab='Number of galls', xlab=
 	'Previous year gall density',ylab='Number of females')
 plot3d(d$galls2011 ~ d$natural.galls + d$females, type='h', add=TRUE)
