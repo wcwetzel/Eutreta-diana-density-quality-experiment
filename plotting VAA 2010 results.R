@@ -38,7 +38,7 @@ p1 = ggplot(data = d, aes(x = females, y = galls2011)) +
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p1.smooth = p1 + stat_smooth(method = 'loess', colour='royalblue', span=1) 
-pdf('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~females.pdf')
+png('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~females.png')
 print(p1.smooth)
 dev.off()
 
@@ -54,7 +54,8 @@ p2 = ggplot(data = d, aes(x = natural.galls, y = galls2011)) +
 p2.smooth = p2 + stat_smooth(method = 'loess', colour='royalblue', span=1)
 
 # save plot as a pdf
-ggsave('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~naturalgalls2.pdf', plot = p2.smooth, width=4, height=4)
+ggsave('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~naturalgalls.png', 
+	plot = p2.smooth, width=4, height=4)
 
 # 3. plot number of galls in spring 2011 ~ time corrected water potential
 #		d$psi.r is residuals of linear regression psi ~ time
@@ -67,7 +68,7 @@ p3 = ggplot(data = d, aes(x = psi.r, y = galls2011)) +
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p3.smooth = p3 + stat_smooth(method = 'loess', colour='royalblue', span=1)
-pdf('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~rpsi.pdf')
+png('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/galls~rpsi.png')
 print(p3.smooth)
 dev.off()
 
@@ -76,7 +77,7 @@ dev.off()
 # 1. plot galls on plants in spring 2011 ~ removed natural galls and introduced females
 # highlight.3d colors points in relation to y axis, the number of females
 # type='h' displays the height of each point
-pdf('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/3d-VAA2010.pdf')
+png('/Users/will/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/3d-VAA2010.png')
 s3d1 = scatterplot3d(d$natural.galls, d$females, d$galls2011, pch=16, highlight.3d=TRUE, 
 	type='h', zlab = 'Galls in year t+1', ylab = 'Introduced females', 
 	xlab = 'Galls in year t')
@@ -84,6 +85,7 @@ s3d1 = scatterplot3d(d$natural.galls, d$females, d$galls2011, pch=16, highlight.
 fit.pois = mle2(galls2011 ~ dpois(lambda = a + b * natural.galls + c * females), 
 	start = list(a = mean(d$galls2011), b = 0, c = 0), method = 'SANN', data=d)
 s3d1$plane3d(fit.pois)
+dev.print(png, file="~/RGraph.png", width=5.1, height=5.1, pointsize=8) # width/height are in inches
 dev.off()
 
 # 2. interactive version of above plot
