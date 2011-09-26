@@ -33,6 +33,10 @@ m0 = mle2(galls2011 ~ dnbinom( mu = mu, size = s), start = list(mu =
 m05 = mle2(galls2011 ~ dnbinom( mu = r * females, size=s ), 
 	start = list(r = 0.5, s=0.4), data = d)
 
+# m05.pois females, no density dependence
+m05.pois = mle2(galls2011 ~ dpois(lambda = r * females), 
+	start = list(r = 0.5), data = d)
+
 # m075 females, galls, no DD
 m075 = mle2(galls2011 ~ dnbinom( mu =  females * exp(r * natural.galls), size=s ), 
 	start = list(r = 0.5, s=0.4, b = 0), data = d)
@@ -84,20 +88,67 @@ BICtab(m0, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
 
 
 
-## compounded binomial - negative binomial ##
+## compounded binomial-Poisson ##
+
+nL = function(x, r, debug=FALSE) {
+	p = 1/(1 + exp(x))
+	R = exp(r)
+	L = numeric(length(d$galls2011))
+	for(i in 1:length(L)){
+		O = 0:max(d$females[i])
+		L[i] = sum(
+			dbinom(O, size = d$females[i], p = p) *
+			dpois(d$galls2011[i], lambda= O * R)
+		)
+
+	}
+	negL = -log(prod(L))
+	if(debug)
+		cat(x, r, negL, '\n')
+	return(negL)
+}
 
 
+BP = mle2(nL, start=list(x = 3, r = 1))
+cat('Estimates:', 'p =', 1/(1 + exp(coef(BP)['x'])), 'R =', exp(coef(BP)['r']), '\n')
+
+profile.BP = profile(BP)
+ci.BP = confint(profile.BP)
+1/ (1 + exp(ci.BP[1,]))
+exp(ci.BP[2,])
+plot(profile.BP)
+
+## compounded binomial-nbinom ##
+
+nL2 = function(x, r, s, debug=FALSE) {
+	p = 1/(1 + exp(x))
+	R = exp(r)
+	L = numeric(length(d$galls2011))
+	for(i in 1:length(L)){
+		O = 0:max(d$females[i])
+		L[i] = sum(
+			dbinom(O, size = d$females[i], p = p) *
+			dnbinom(d$galls2011[i], mu = O * R, size = s)
+		)
+
+	}
+	negL = -log(prod(L))
+	if(debug)
+		cat(x, r, s, negL, '\n')
+	return(negL)
+}
 
 
+BNB = mle2(nL2, start=list(x = 3, r = 1, s=1))
+cat('Estimates:', 'p =', 1/(1 + exp(coef(BNB)['x'])), 'R =', exp(coef(BNB)['r']), '\n')
 
+profile.BNB = profile(BNB)
+ci.BNB = confint(profile.BNB)
+1/ (1 + exp(ci.BNB[1,]))
+exp(ci.BNB[2,])
+plot(profile.BNB)
 
-
-
-
-
-
-
-
+AICtab(m05, m05.pois, BP, BNB)
 
 
 
