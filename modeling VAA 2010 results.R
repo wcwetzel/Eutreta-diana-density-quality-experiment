@@ -10,8 +10,11 @@ library(emdbook)
 # load data, entered gall numbers on map data csv
 d = read.csv('~/Documents/DATA/2011 DATA/field/VAA map.csv')
 
+d$area = d$d1 * d$d2
+d$volume = d$area * d$h
 d$gpf = d$galls2011 / d$females
 d$gpf[is.nan(d$gpf)] = 0
+d$lgpf = log(d$gpf)
 
 # using approach from qualifying exam
 # see 'qe presentation.pdf'
@@ -78,6 +81,28 @@ m5 = mle2(galls2011 ~ dnbinom( mu = females * exp(r * (1 - females / k) +
 AICtab(m0, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
 BICtab(m0, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
 
+
+
+
+## compounded binomial - negative binomial ##
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### PLOTTING PREDICTIONS AND CIs ####
 # adding fits and CIs to plots
 # first run 'plotting VAA 2010 results.R'
 
@@ -111,11 +136,10 @@ ci.m1 = confint(profile.m1)
 pred.m1$ymin = ci.m1['R', 1] * fp * exp(-ci.m1['b', 2] * fp)
 pred.m1$ymax = ci.m1['R', 2] * fp * exp(0 * fp)
 
-p1.fitted = p1 + geom_smooth(aes(x=fp, y=galls, ymin=ymin, ymax=ymax), 
+p1.fitted = p1.fitted + geom_smooth(aes(x=fp, y=galls, ymin=ymin, ymax=ymax), 
 	data=pred.m1, stat='identity', colour='red', fill='red', alpha=1/4)
 
 print(p1.fitted)
-
 
 # mean predictions and CI for m2
 pred.m2c = data.frame(females = fp, galls = coef(m2c)['r'] * fp / (1 + fp))
