@@ -1,6 +1,7 @@
 ### hierarchical binomial-negative binomial
 # 26 Sep 2011
 
+# binomal female survival followed by neg binom distribution of offspring
 
 nll.bnb = function(x, r, s, debug=FALSE) {
 	p = 1/(1 + exp(x))
