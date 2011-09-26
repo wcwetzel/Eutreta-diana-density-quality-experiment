@@ -22,3 +22,5 @@ nll.bnb = function(x, r, s, debug=FALSE) {
 
 BNB = mle2(nL2, start=list(x = 3, r = 1, s=1))
 cat('Estimates:', 'p =', 1/(1 + exp(coef(BNB)['x'])), 'R =', exp(coef(BNB)['r']), '\n')
+
+
