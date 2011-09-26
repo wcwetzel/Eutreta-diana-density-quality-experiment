@@ -92,7 +92,7 @@ BICtab(m0, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
 
 nL = function(x, r, debug=FALSE) {
 	p = 1/(1 + exp(x))
-	R = exp(r)
+	#R = exp(r) # get rid of this??
 	L = numeric(length(d$galls2011))
 	for(i in 1:length(L)){
 		O = 0:max(d$females[i])
@@ -121,14 +121,14 @@ plot(profile.BP)
 ## compounded binomial-nbinom ##
 
 nL2 = function(x, r, s, debug=FALSE) {
-	p = 1/(1 + exp(x))
-	R = exp(r)
+	#p = 1/(1 + exp(x))
+	#R = exp(r)
 	L = numeric(length(d$galls2011))
 	for(i in 1:length(L)){
 		O = 0:max(d$females[i])
 		L[i] = sum(
-			dbinom(O, size = d$females[i], p = p) *
-			dnbinom(d$galls2011[i], mu = O * R, size = s)
+			dbinom(O, size = d$females[i], p = x) *
+			dnbinom(d$galls2011[i], mu = O * r, size = s)
 		)
 
 	}
@@ -139,7 +139,7 @@ nL2 = function(x, r, s, debug=FALSE) {
 }
 
 
-BNB = mle2(nL2, start=list(x = 3, r = 1, s=1))
+BNB = mle2(nL2, start=list(x = 0.5, r = 1, s=1))
 cat('Estimates:', 'p =', 1/(1 + exp(coef(BNB)['x'])), 'R =', exp(coef(BNB)['r']), '\n')
 
 profile.BNB = profile(BNB)
@@ -190,7 +190,9 @@ pred.m1$ymax = ci.m1['R', 2] * fp * exp(0 * fp)
 p1.fitted = p1.fitted + geom_smooth(aes(x=fp, y=galls, ymin=ymin, ymax=ymax), 
 	data=pred.m1, stat='identity', colour='red', fill='red', alpha=1/4)
 
-print(p1.fitted)
+ggsave(filename = 
+	'~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs/galls~females_fits.pdf',
+	plot = p1.fitted)
 
 # mean predictions and CI for m2
 pred.m2c = data.frame(females = fp, galls = coef(m2c)['r'] * fp / (1 + fp))
@@ -269,15 +271,5 @@ abline(mf2, col='blue')
 AICtab(mf1, mf2, mf3, mf4, mf5, mfg1, mfg2, mg1, mg2)
 
 
-
-# try a zero inflated or other compound model
-
-# zero-inflated nbinom from bolker book package
-
-mz1 = mle2(galls2011 ~ dzinbinom(mu = a * females, size = s, zprob = zprob), 
-	start = list(a = 1/4, s = 1, zprob = 0.5), data = d)
-
-
-AICtab(mf1, mf2, mf3, mf4, mf5, mfg1, mfg2, mg1, mg2, mz1)
 ##############################################################
 

@@ -23,16 +23,15 @@ library(bbmle)
 
 ## first 2-dimensional plots
 # load someone's hack to allow suppression of top and right borders
-source("~/Documents/R/ggplot2/rnc_ggplot2_border_themes.r")
+#source("~/Documents/R/ggplot2/rnc_ggplot2_border_themes.r")
 
 # 1. plot number of galls in spring 2011 ~ number of females introduced in summer 2010
 p1 = ggplot(data = d, aes(x = females, y = galls2011)) +
 	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
 	size = 2.5) + 
 	theme_bw() + 
-	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank(), # remove gridlines
-		panel.border = theme_border(c('left', 'bottom'))) # remove top and right of plot box
-		
+	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank()) # remove gridlines
+				
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p1.smooth = p1 + stat_smooth(method = 'loess', colour='royalblue', span=1) 
 
@@ -45,8 +44,7 @@ ggsave('~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs
 p2 = ggplot(data = d, aes(x = natural.galls, y = galls2011)) +
 	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
 	size = 2.5) + theme_bw() + 
-	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank(),
-		panel.border = theme_border(c('left', 'bottom')))
+	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank())
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p2.smooth = p2 + stat_smooth(method = 'loess', colour='royalblue', span=1)
@@ -62,8 +60,7 @@ p3 = ggplot(data = d, aes(x = psi.r, y = galls2011)) +
 	geom_point(colour = 'royalblue', alpha = 1/2, size = 2.5) + 
 	scale_y_continuous(limits = c(0,12)) +
 	theme_bw() + 
-	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank(),
-		panel.border = theme_border(c('left', 'bottom')))
+	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank())
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
 p3.smooth = p3 + stat_smooth(method = 'loess', colour='royalblue', span=1)
