@@ -5,7 +5,7 @@
 ### density / host-plant quality experiment  ###
 
 library(bbmle)
-library(emdbook)
+#library(emdbook)
 
 # load data, entered gall numbers on map data csv
 d = read.csv('~/Documents/DATA/2011 DATA/field/VAA map.csv')
@@ -15,6 +15,8 @@ d$volume = d$area * d$h
 d$gpf = d$galls2011 / d$females
 d$gpf[is.nan(d$gpf)] = 0
 d$lgpf = log(d$gpf)
+d$I[d$females==0] = 0
+d$I[d$females>0] = 1
 
 # using approach from qualifying exam
 # see 'qe presentation.pdf'
@@ -25,14 +27,16 @@ d$lgpf = log(d$gpf)
 # going with nbinom instead of pois b/c var is several times the mean
 # also it makes sense that the lambda on each shrub would be gamma distributed
 
-# m0. intercept model
-m0 = mle2(galls2011 ~ dnbinom( mu = mu, size = s), start = list(mu = 
-	mean(d$galls2011), s=1), data=d)
+
+# m0.nozero. intercept model, makes much more sense than plain intercept
+# 0 galls if 0 females, mu galls if >0 females
+# this is the same as fitting the dataset without reps that had 0 females
+m00 = mle2(galls2011 ~ dnbinom(mu = mu * d$I, size=s),
+	start=list(mu = 2.5, s=1), data=d)
 
 # m05. females, no density dependence
 m05 = mle2(galls2011 ~ dnbinom( mu = r * females, size=s ), 
 	start = list(r = 0.5, s=0.4), data = d)
-
 # m05.pois females, no density dependence
 m05.pois = mle2(galls2011 ~ dpois(lambda = r * females), 
 	start = list(r = 0.5), data = d)
@@ -81,56 +85,51 @@ m5 = mle2(galls2011 ~ dnbinom( mu = females * exp(r * (1 - females / k) +
 
 
 
-
-AICtab(m0, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
-BICtab(m0, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
+AICtab(m00, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5, m0.nozero)
+BICtab(m00, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
 
 
 
 
 ## compounded binomial-Poisson ##
 
-nL = function(x, r, debug=FALSE) {
-	p = 1/(1 + exp(x))
-	#R = exp(r) # get rid of this??
+NLL.BP = function(p, r, debug=FALSE) {
+	#p = 1/(1 + exp(x)) # these transformations don't need necessary for fitting
+	#R = exp(r) # these transformations don't need necessary for fitting
 	L = numeric(length(d$galls2011))
 	for(i in 1:length(L)){
 		O = 0:max(d$females[i])
 		L[i] = sum(
 			dbinom(O, size = d$females[i], p = p) *
-			dpois(d$galls2011[i], lambda= O * R)
+			dpois(d$galls2011[i], lambda= O * r)
 		)
-
 	}
 	negL = -log(prod(L))
 	if(debug)
-		cat(x, r, negL, '\n')
+		cat(p, r, negL, '\n')
 	return(negL)
 }
 
 
-BP = mle2(nL, start=list(x = 3, r = 1))
-cat('Estimates:', 'p =', 1/(1 + exp(coef(BP)['x'])), 'R =', exp(coef(BP)['r']), '\n')
+BP = mle2(NLL.BP, start=list(p = 0.5, r = 1))
+#cat('Estimates:', 'p =', 1/(1 + exp(coef(BP)['x'])), 'R =', exp(coef(BP)['r']), '\n')
 
 profile.BP = profile(BP)
 ci.BP = confint(profile.BP)
-1/ (1 + exp(ci.BP[1,]))
-exp(ci.BP[2,])
 plot(profile.BP)
 
 ## compounded binomial-nbinom ##
 
-nL2 = function(x, r, s, debug=FALSE) {
-	#p = 1/(1 + exp(x))
-	#R = exp(r)
+NLL.BNB = function(x, r, s, debug=FALSE) {
+	p = 1/(1 + exp(x)) # these transformations are necessary for profiling binom-nbinom
+	R = exp(r)
 	L = numeric(length(d$galls2011))
 	for(i in 1:length(L)){
 		O = 0:max(d$females[i])
 		L[i] = sum(
-			dbinom(O, size = d$females[i], p = x) *
-			dnbinom(d$galls2011[i], mu = O * r, size = s)
+			dbinom(O, size = d$females[i], p = p) *
+			dnbinom(d$galls2011[i], mu = O * R, size = s)
 		)
-
 	}
 	negL = -log(prod(L))
 	if(debug)
@@ -139,8 +138,8 @@ nL2 = function(x, r, s, debug=FALSE) {
 }
 
 
-BNB = mle2(nL2, start=list(x = 0.5, r = 1, s=1))
-cat('Estimates:', 'p =', 1/(1 + exp(coef(BNB)['x'])), 'R =', exp(coef(BNB)['r']), '\n')
+BNB = mle2(NLL.BNB, start=list(x = 1, r = 1, s=1))
+#cat('Estimates:', 'p =', 1/(1 + exp(coef(BNB)['x'])), 'R =', exp(coef(BNB)['r']), '\n')
 
 profile.BNB = profile(BNB)
 ci.BNB = confint(profile.BNB)
@@ -148,7 +147,7 @@ ci.BNB = confint(profile.BNB)
 exp(ci.BNB[2,])
 plot(profile.BNB)
 
-AICtab(m05, m05.pois, BP, BNB)
+AICtab(m00, m05, m05.pois, m0.pois, BP, BNB, m1)
 
 
 
