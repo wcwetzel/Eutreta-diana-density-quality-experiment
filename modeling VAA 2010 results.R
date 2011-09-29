@@ -11,7 +11,7 @@ library(bbmle)
 d = read.csv('~/Documents/DATA/2011 DATA/field/VAA map.csv')
 
 d$area = d$d1 * d$d2
-d$volume = d$area * d$h
+d$volume = d$area * d$h /1000
 d$gpf = d$galls2011 / d$females
 d$gpf[is.nan(d$gpf)] = 0
 d$lgpf = log(d$gpf)
@@ -28,98 +28,175 @@ d$I[d$females>0] = 1
 # also it makes sense that the lambda on each shrub would be gamma distributed
 
 
-# m0.nozero. intercept model, makes much more sense than plain intercept
+# m00. intercept model, makes much more sense than plain intercept
 # 0 galls if 0 females, mu galls if >0 females
-# this is the same as fitting the dataset without reps that had 0 females
-m00 = mle2(galls2011 ~ dnbinom(mu = mu * d$I, size=s),
+m00 = mle2(galls2011 ~ dnbinom(mu = mu * I, size=s),
 	start=list(mu = 2.5, s=1), data=d)
 
-# m05. females, no density dependence
-m05 = mle2(galls2011 ~ dnbinom( mu = r * females, size=s ), 
-	start = list(r = 0.5, s=0.4), data = d)
-# m05.pois females, no density dependence
-m05.pois = mle2(galls2011 ~ dpois(lambda = r * females), 
-	start = list(r = 0.5), data = d)
+# m10. linear females (no density dependence)
+m10 = mle2(galls2011 ~ dnbinom( mu = R * females, size=s ), 
+	start = list(R = 0.5, s=0.4), data = d)
 
-# m075 females, galls, no DD
-m075 = mle2(galls2011 ~ dnbinom( mu =  females * exp(r * natural.galls), size=s ), 
-	start = list(r = 0.5, s=0.4, b = 0), data = d)
+# m20. nonlinear (ricker) females
+m20 = mle2(galls2011 ~ dnbinom( mu = R * females * exp(-k * females), size=s ), 
+	start = list(R = 0.5, k = 1, s=0.4), data = d)
 
-# m1. females, ricker -- it can't seem to calculate profiles for this parameterization
-#m1 = mle2(galls2011 ~ dnbinom( mu = females * exp(r * (1 - females / k)), size=s ), 
-#	start = list(r = -0.3, k = 4, s=0.4), data = d)
+# m01. intercept females, log linear natural galls
+m01 = mle2(galls2011 ~ dnbinom(mu = exp(a + b * natural.galls) * I, size=s),
+	start=list(a = 2.5, b=0, s=1), data=d)
+
+# m11. linear females, log linear natural galls
+m11 = mle2(galls2011 ~ dnbinom( mu = exp(a + b * natural.galls) * females, size=s ), 
+	start = list(a = 0.5, b=0, s=0.4), data = d)
+
+# m21. nonlinear (ricker) females, log linear natural galls
+m21 = mle2(galls2011 ~ dnbinom( mu = exp(a + b * natural.galls) * females * exp(-k * females), size=s ), 
+	start = list(a = 0.5, b = 1, k = 1, s=0.4), data = d)
+
+# m02. intercept females, log linear psi.r
+m02 = mle2(galls2011 ~ dnbinom(mu = exp(a + b * psi.r) * I, size=s),
+	start=list(a = 2.5, b=0, s=1), data=d)
+
+# m12. linear females, log linear psi.r
+m12 = mle2(galls2011 ~ dnbinom( mu = exp(a + b * psi.r) * females, size=s ), 
+	start = list(a = 1, b = 0, s=0.4), data = d)
+
+# m22. nonlinear (ricker) females, log linear psi.r
+m22 = mle2(galls2011 ~ dnbinom( mu = exp(a + b * psi.r) * females * exp(-k * females), size=s ), 
+	start = list(a = 0.5, b = 1, k = 1, s=0.4), data = d)
 	
-# m1. females, ricker
-m1 = mle2(galls2011 ~ dnbinom( mu = R * females * exp(-b * females), size=s ), 
-	start = list(R = 0.5, b = 1, s=0.4), data = d)
+# m1b. linear females, log linear natural galls, log linear psi.r
+m1b = mle2(galls2011 ~ dnbinom( mu = exp(a + b * natural.galls + c * psi.r) * females, size=s ), 
+	start = list(a = 0.5, b=0, c=0, s=0.4), data = d)
+
+# m00size. intercept females, log linear natural galls
+m00size = mle2(galls2011 ~ dnbinom(mu = exp(a + b * volume) * I, size=s),
+	start=list(a = 2.5, b=0, s=0.5), data=d)
 	
-# m2. females, beverton holt
-m2a = mle2(galls2011 ~ dnbinom( mu = exp(r) * females / (1 + a * females), size=s ), 
-	start = list(r = 0.8, a = 0.1, s=0.4), data = d)
-	
-# m2. females, beverton holt
-m2b = mle2(galls2011 ~ dnbinom( mu = exp(r) * females / (1 + exp(a) * females), size=s ), 
-	start = list(r = 0.8, a = 0.1, s=0.4), data = d)
-	
-# m2. females, beverton holt
-m2c = mle2(galls2011 ~ dnbinom( mu = exp(r) * females / (1 + females), size=s ), 
-	start = list(r = 0.8, s=0.4), data = d)
-	
-# m2. females, beverton holt
-m2d = mle2(galls2011 ~ dnbinom( mu = exp(r) * females / (a + females), size=s ), 
-	start = list(r = 0.8, a = 1, s=0.4), data = d)
+# m10size. linear females (no density dependence)
+m10size = mle2(galls2011 ~ dnbinom( mu = exp(a + b * volume) * females, size=s ), 
+	start = list(a = 0.5, b=0, s=0.4), data = d)
 
-# m3. females, psi.r, ricker
-m3 = mle2(galls2011 ~ dnbinom( mu = females * exp(r * (1 - females / k) + 
-	b1 * psi.r), size=s ), start = list(r = -0.3, k = 4, s=0.4, b1=0), data = d)
-
-# m4. females, galls, ricker
-m4 = mle2(galls2011 ~ dnbinom( mu = females * exp(r * (1 - females / k) + 
-	b1 * natural.galls), size=s ), start = list(r = -0.3, k = 4, s=0.4, b1=0), 
-	data = d)
-
-# m5. females, galls, psi.r, ricker
-m5 = mle2(galls2011 ~ dnbinom( mu = females * exp(r * (1 - females / k) + 
-	b1 * natural.galls + b2 * psi.r), size=s ), start = list(r = -0.3, k = 4, s=0.4, 
-	b1=0, b2=0), data = d)
+AICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, m00size, m10size, weights=TRUE, nobs=30)
+BICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, weights=TRUE, nobs=30)
 
 
+## compounded binomial-nbinom ##
 
-AICtab(m00, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5, m0.nozero)
-BICtab(m00, m05, m075, m1, m2a, m2b, m2c, m2d, m3, m4, m5)
-
-
-
-
-## compounded binomial-Poisson ##
-
-NLL.BP = function(p, r, debug=FALSE) {
-	#p = 1/(1 + exp(x)) # these transformations don't need necessary for fitting
-	#R = exp(r) # these transformations don't need necessary for fitting
+# m00 with bnb. intercept females >0
+nll.m00bnb = function(mu, x, s) {
+	p = 1/(1 + exp(x)) # this transformation is necessary for profiling binom-nbinom
 	L = numeric(length(d$galls2011))
 	for(i in 1:length(L)){
 		O = 0:max(d$females[i])
 		L[i] = sum(
 			dbinom(O, size = d$females[i], p = p) *
-			dpois(d$galls2011[i], lambda= O * r)
+			dnbinom(d$galls2011[i], mu = mu * d$I, size = s)
+		)
+	}
+	negL = -log(prod(L))	
+	cat('mu=', mu, 'x=', x, 'p=', 1/(1+exp(x)), 's=', s, '-nll=', negL, '\n')
+	return(negL)
+}
+m00bnb = mle2(nll.m00bnb, start=list(mu=2, x=0, s=0.5), data=d)
+profile.m00bnb = profile(m00bnb)
+plot(profile.m00bnb)
+
+
+# as above but with Poisson
+nll.m00bp = function(mu, x) {
+	p = 1/(1 + exp(x)) # this transformation is necessary for profiling binom-nbinom
+	L = numeric(length(d$galls2011))
+	for(i in 1:length(L)){
+		O = 0:max(d$females[i])
+		L[i] = sum(
+			dbinom(O, size = d$females[i], p = p) *
+			dpois(d$galls2011[i], lambda = mu * d$I)
+		)
+	}
+	negL = -log(prod(L))	
+	cat('mu=', mu, 'x=', x, 'p=', 1/(1+exp(x)), '-nll=', negL, '\n')
+	return(negL)
+}
+m00bp = mle2(nll.m00bp, start=list(mu=2, x=0), data=d)
+profile.m00bp = profile(m00bp)
+confint(profile.m00bp)
+
+# m10 with bnb, linear females
+nll.m10bnb = function(R, x, s) {
+	p = 1/(1 + exp(x)) # logistic transformation for survival probability
+	L = numeric(length(d$galls2011))
+	for(i in 1:length(L)){
+		O = 0:max(d$females[i])
+		L[i] = sum(
+			dbinom(O, size = d$females[i], p = p) *
+			dnbinom(d$galls2011[i], mu = R * females, size = s)
 		)
 	}
 	negL = -log(prod(L))
-	if(debug)
-		cat(p, r, negL, '\n')
+}
+m10bnb = mle2(nll.m10bnb, start=list(R=1, x=0, s=0.5), data=d)
+profile.m10bnb = profile(m10bnb)
+
+# m20 with bnb, nonlinear (ricker) females
+nll.m20bnb = function(r, k, x, s, debug=TRUE) {
+	p = 1/(1 + exp(x)) # logistic transformation for survival probability
+	L = numeric(length(d$galls2011))
+	for(i in 1:length(L)){
+		O = 0:max(d$females[i])
+		L[i] = sum(
+			dbinom(O, size = d$females[i], p = p) *
+			dnbinom(d$galls2011[i], mu = exp(r) * females * exp(-k * females), size = exp(s))
+		)
+	}
+	negL = -log(prod(L))
+	if(debug) 
+		cat('r:', r, 'R:', log(r), 'k:', k, 'x:', x, 'p:', 1/(1+exp(x)), 's:', s, negL, '\n')
 	return(negL)
 }
+m20bnb = mle2(nll.m20bnb, start=list(r=0, k=1, x=0, s=0.5), data=d)
+
+# m01 with bnb. intercept females >0, linear natural galls
+nll.m01bnb = function(a, b, x, s) {
+	p = 1/(1 + exp(x)) # this transformation is necessary for profiling binom-nbinom
+	L = numeric(length(d$galls2011))
+	for(i in 1:length(L)){
+		O = 0:max(d$females[i])
+		L[i] = sum(
+			dbinom(O, size = d$females[i], p = p) *
+			dnbinom(d$galls2011[i], mu = exp(a + b * natural.galls) * d$I, size = s)
+		)
+	}
+	negL = -log(prod(L))
+}
+m01bnb = mle2(nll.m01bnb, start=list(a=2, b=0, x=0, s=0.5), data=d)
+profile.m01bnb = profile(m01bnb)
 
 
-BP = mle2(NLL.BP, start=list(p = 0.5, r = 1))
-#cat('Estimates:', 'p =', 1/(1 + exp(coef(BP)['x'])), 'R =', exp(coef(BP)['r']), '\n')
+nll.m11bnb = function(a, b, x, s) {
+	p = 1/(1 + exp(x)) # logistic transformation for survival probability
+	L = numeric(length(d$galls2011))
+	for(i in 1:length(L)){
+		O = 0:max(d$females[i])
+		L[i] = sum(
+			dbinom(O, size = d$females[i], p = p) *
+			dnbinom(d$galls2011[i], mu = exp(a + b * natural.galls) * females, size = s)
+		)
+	}
+	negL = -log(prod(L))
+}
+m11bnb = mle2(nll.m11bnb, start=list(a=1, b=0, x=0, s=0.5), data=d)
 
-profile.BP = profile(BP)
-ci.BP = confint(profile.BP)
-plot(profile.BP)
 
-## compounded binomial-nbinom ##
 
+
+AICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, m00bnb, m10bnb, m20bnb, m01bnb, m11bnb, weights=TRUE, nobs=30)
+BICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, BNB, weights=TRUE, nobs=30)
+
+
+
+
+# old BNB with debugging code
 NLL.BNB = function(x, r, s, debug=FALSE) {
 	p = 1/(1 + exp(x)) # these transformations are necessary for profiling binom-nbinom
 	R = exp(r)
@@ -132,8 +209,7 @@ NLL.BNB = function(x, r, s, debug=FALSE) {
 		)
 	}
 	negL = -log(prod(L))
-	if(debug)
-		cat(x, r, s, negL, '\n')
+	if(debug) cat(x, r, s, negL, '\n')
 	return(negL)
 }
 
@@ -146,11 +222,6 @@ ci.BNB = confint(profile.BNB)
 1/ (1 + exp(ci.BNB[1,]))
 exp(ci.BNB[2,])
 plot(profile.BNB)
-
-AICtab(m00, m05, m05.pois, m0.pois, BP, BNB, m1)
-
-
-
 
 #### PLOTTING PREDICTIONS AND CIs ####
 # adding fits and CIs to plots
@@ -222,53 +293,4 @@ print(p1.smooth2)
 
 
 
-
-
-
-
-
-
-################### OLD ###################################
-mf1 = mle2(d$galls2011 ~ dpois(lambda = a * d$females), data=d, start=list(a = 1/4))
-plot(galls2011 ~ females, data=d)
-abline(mf1)
-mf2 = mle2(d$galls2011 ~ dnbinom(mu = a * d$females, size = s), 
-	start=list(a = 1/4, s = 1), data=d)
-abline(mf2, col='blue')
-mf3 = mle2(d$galls2011 ~ dnbinom(mu = a * d$females / (b + d$females), size=s), 
-	start=list(a = 7, b = 2, s=1), data=d, method='SANN')
-points(x=1:16, y = coef(mf3)[1] * 1:16 / (coef(mf3)[2] + 1:16), type='l', col='red')
-
-mf4 = mle2(d$galls2011 ~ dnbinom(mu = a * (1 - exp(-b * d$females)), size=s),
-	start=list(a = 7, b = 1/4, s = 1), data=d)
-points(x=1:16, y = coef(mf4)[1] * (1 - exp(-coef(mf4)[2] * 1:16)), type='l', col='orange')
-
-mf5 = mle2(d$galls2011 ~ dnbinom(mu = exp(b * d$females), size=s), 
-	start=list(b = 1, s=1), data=d)
-points(x=1:16, y = exp(coef(mf5)[1] * 1:16), type='l', col='green')
-
-mfg1 = mle2(d$galls2011 ~ dpois(lambda = a * (d$females + d$natural.galls)), data=d, 
-	start=list(a = 1/4))
-abline(mfg1, lty=2)
-
-mfg2 = mle2(d$galls2011 ~ dnbinom(mu = a * (d$females + d$natural.galls), size = s), 
-	start=list(a = 1/4, s = 1), data=d)
-abline(mf2, col='blue', lty=2)
-
-mg1 = mle2(d$galls2011 ~ dpois(lambda = a * (d$natural.galls+1)), data=d, 
-	start=list(a = 1/4))
-abline(mfg1, lty=2)
-
-mg2 = mle2(d$galls2011 ~ dnbinom(mu = a * (1 + d$natural.galls), size = s), 
-	start=list(a = 1/4, s = 1), data=d)
-abline(mf2, col='blue', lty=2)
-
-mf2.1 = mle2(d$galls2011 ~ dnbinom(mu = a * d$females + b * (psi.r+.3), size = s), 
-	start=list(a = 1/4, b=1, s = 1), data=d)
-abline(mf2, col='blue')
-
-AICtab(mf1, mf2, mf3, mf4, mf5, mfg1, mfg2, mg1, mg2)
-
-
-##############################################################
 
