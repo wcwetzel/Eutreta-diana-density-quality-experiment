@@ -78,7 +78,7 @@ m10size = mle2(galls2011 ~ dnbinom( mu = exp(a + b * volume) * females, size=s )
 	start = list(a = 0.5, b=0, s=0.4), data = d)
 
 AICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, m00size, m10size, weights=TRUE, nobs=30)
-BICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, weights=TRUE, nobs=30)
+BICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, m00size, m10size, weights=TRUE, nobs=30)
 
 
 ## compounded binomial-nbinom ##

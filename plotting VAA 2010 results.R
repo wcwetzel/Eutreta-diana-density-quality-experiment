@@ -29,14 +29,16 @@ library(bbmle)
 p1 = ggplot(data = d, aes(x = females, y = galls2011)) +
 	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
 	size = 2.5) + 
+	scale_x_continuous('females') +
+	scale_y_continuous('galls produced') +
 	theme_bw() + 
 	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank()) # remove gridlines
 				
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
-p1.smooth = p1 + stat_smooth(method = 'loess', colour='royalblue', span=1) 
-
+p1.smooth = p1 + stat_smooth(method = 'lm', colour='royalblue') 
+p1.smooth
 # save plot as pdf
-ggsave('~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs/galls~females.pdf', 
+ggsave('~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs/galls~females_lm.pdf', 
 	plot = p1.smooth, width=4, height=4)
 
 # 2. plot number of galls in spring 2011 ~ 
@@ -44,14 +46,16 @@ ggsave('~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs
 p2 = ggplot(data = d, aes(x = natural.galls, y = galls2011)) +
 	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
 	size = 2.5) + theme_bw() + 
+	scale_x_continuous('previous galls') +
+	scale_y_continuous('galls produced') +
 	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank())
 		
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
-p2.smooth = p2 + stat_smooth(method = 'loess', colour='royalblue', span=1)
-
+p2.smooth = p2 + stat_smooth(method = 'lm', colour='royalblue')
+p2.smooth
 # save plot as a pdf
 ggsave(
-	'~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs/galls~naturalgalls.pdf', 
+	'~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs/galls~naturalgalls_lm.pdf', 
 	plot = p2.smooth, width=4, height=4)
 
 # 3. plot number of galls in spring 2011 ~ time corrected water potential
