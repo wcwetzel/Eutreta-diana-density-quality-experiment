@@ -50,8 +50,8 @@ m11 = mle2(galls2011 ~ dnbinom( mu = exp(a + b * natural.galls) * females, size=
 	start = list(a = 0.5, b=0, s=0.4), data = d)
 
 # m21. nonlinear (ricker) females, log linear natural galls
-m21 = mle2(galls2011 ~ dnbinom( mu = exp(a + b * natural.galls) * females * exp(-k * females), size=s ), 
-	start = list(a = 0.5, b = 1, k = 1, s=0.4), data = d)
+m21 = mle2(galls2011 ~ dnbinom( mu = exp(a + b * natural.galls) * 
+	females * exp(-k * females), size=s ), start = list(a = 0.5, b = 1, k = 1, s=0.4), data = d)
 
 # m02. intercept females, log linear psi.r
 m02 = mle2(galls2011 ~ dnbinom(mu = exp(a + b * psi.r) * I, size=s),
@@ -77,8 +77,10 @@ m00size = mle2(galls2011 ~ dnbinom(mu = exp(a + b * volume) * I, size=s),
 m10size = mle2(galls2011 ~ dnbinom( mu = exp(a + b * volume) * females, size=s ), 
 	start = list(a = 0.5, b=0, s=0.4), data = d)
 
-AICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, m00size, m10size, weights=TRUE, nobs=30)
-BICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, m00size, m10size, weights=TRUE, nobs=30)
+AICctab(m00, m10, m20, m01, m11, m21, m02, 
+	m12, m22, m1b, m00size, m10size)
+BICtab(m00, m10, m20, m01, m11, m21, m02, 
+	m12, m22, m1b, m00size, m10size, weights=TRUE, nobs=30)
 
 
 ## compounded binomial-nbinom ##
@@ -190,8 +192,10 @@ m11bnb = mle2(nll.m11bnb, start=list(a=1, b=0, x=0, s=0.5), data=d)
 
 
 
-AICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, m00bnb, m10bnb, m20bnb, m01bnb, m11bnb, weights=TRUE, nobs=30)
-BICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, BNB, weights=TRUE, nobs=30)
+AICtab(m00, m10, m20, m01, m11, m21, m02, m12, m22, m1b, 
+	m00bnb, m10bnb, m20bnb, m01bnb, m11bnb, weights=TRUE, nobs=30)
+BICtab(m00, m10, m20, m01, m11, m21, m02, 
+	m12, m22, m1b, BNB, weights=TRUE, nobs=30)
 
 
 

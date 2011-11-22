@@ -100,6 +100,34 @@ plot3d(d$galls2011 ~ d$natural.galls + d$females, type='h', add=TRUE)
 
 
 
+######## 2-d: only plants with >0 galls
+# 1. plot number of galls in spring 2011 ~ number of females introduced in summer 2010
+dplus = d[d$galls2011>0,]
+
+p1 = ggplot(data = dplus, aes(x = females, y = galls2011)) +
+	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
+	size = 2.5) + 
+	scale_x_continuous('females') +
+	scale_y_continuous('galls produced') +
+	theme_bw() + 
+	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank()) # remove gridlines
+				
+# now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
+p1.smooth = p1 + stat_smooth(method = 'lm', colour='royalblue') 
+p1.smooth
+
+# 2. plot number of galls in spring 2011 ~ 
+#		number of naturally occuring, experimentally removed 2010 galls
+p2 = ggplot(data = dplus, aes(x = natural.galls, y = galls2011)) +
+	geom_point(colour = 'royalblue', alpha = 1/2, position = position_jitter(w = 0.15, h = 0.15),
+	size = 2.5) + theme_bw() + 
+	scale_x_continuous('previous galls') +
+	scale_y_continuous('galls produced') +
+	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank())
+		
+# now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
+p2.smooth = p2 + stat_smooth(method = 'lm', colour='royalblue')
+p2.smooth
 
 
 
