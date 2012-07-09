@@ -6,6 +6,7 @@
 
 library(bbmle)
 #library(emdbook)
+library(rethinking)
 
 # load data, entered gall numbers on map data csv
 d = read.csv('~/Documents/DATA/2011 DATA/field/VAA map.csv')
@@ -17,6 +18,61 @@ d$gpf[is.nan(d$gpf)] = 0
 d$lgpf = log(d$gpf)
 d$I[d$females==0] = 0
 d$I[d$females>0] = 1
+
+
+#------- do galls increase with females or natural galls? --------#
+# 7 May 2012 # 
+# only with cages with >0 females
+df = d[d$females>0,]
+
+
+# females #
+plot(galls2011 ~ females, data=df)
+
+# intercept
+m0 = mle2(galls2011 ~ dnbinom(mu = mu, size=s),
+	start=list(mu = 2.5, s=1), data=df)
+
+# no intercept linear females (no density dependence)
+m1 = mle2(galls2011 ~ dnbinom( mu = R * females, size=s ), 
+	start = list(R = 0.5, s=0.4), data = df)
+
+# intercept linear females (no density dependence)
+m2 = mle2(galls2011 ~ dnbinom( mu = mu + R * females, size=s ), 
+	start = list(mu = 2.5, R = 0.5, s=0.4), data = df)
+
+abline(h=coef(m0)['mu'])
+abline(a=0, b=coef(m1)['R'])
+abline(a=coef(m2)['mu'], b=coef(m2)['R'])
+
+
+AICctab(m0, m1, m2, nobs=nrow(df))
+anova(m0,m2)
+
+
+# natural galls #
+# intercept
+m0 = mle2(galls2011 ~ dnbinom(mu = mu, size=s),
+	start=list(mu = 2.5, s=1), data=df)
+
+# intercept linear females (no density dependence)
+m1 = mle2(galls2011 ~ dnbinom( mu = mu + R * natural.galls, size=s ), 
+	start = list(mu = 2.5, R = 0.5, s=0.4), data = df)
+
+plot(galls2011 ~ natural.galls, data=df)
+abline(h=coef(m0)['mu'])
+abline(a=coef(m1)['mu'], b=coef(m1)['R'])
+
+
+AICctab(m0, m1, nobs=nrow(df))
+anova(m0,m2)
+
+
+#-------------------end 7 may 2012------------------#
+
+
+
+
 
 # using approach from qualifying exam
 # see 'qe presentation.pdf'
@@ -37,9 +93,29 @@ m00 = mle2(galls2011 ~ dnbinom(mu = mu * I, size=s),
 m10 = mle2(galls2011 ~ dnbinom( mu = R * females, size=s ), 
 	start = list(R = 0.5, s=0.4), data = d)
 
+confint(m10)
+postm10 = sample.naive.posterior(m10)
+new.females = 0:18
+mu = sapply(new.females, function(z) mean(postm10[,1] * z))
+mu.ci = sapply(new.females, function(z) HPDI(postm10[,1] * z))
+
+plot(galls2011 ~ females, data=d)
+lines(new.females, mu)
+lines(new.females, mu.ci[1,], lty=2)
+lines(new.females, mu.ci[2,], lty=2)
+
 # m20. nonlinear (ricker) females
 m20 = mle2(galls2011 ~ dnbinom( mu = R * females * exp(-k * females), size=s ), 
 	start = list(R = 0.5, k = 1, s=0.4), data = d)
+
+postm20 = sample.naive.posterior(m20)
+mu20 = sapply(new.females, function(z) mean(postm10[,1] * z * exp(-postm10[,2] * z)))
+mu20.ci = sapply(new.females, function(z) HPDI(postm10[,1] * z * exp(-postm10[,2] * z)))
+
+plot(galls2011 ~ females, data=d)
+lines(new.females, mu20, col='steelblue')
+lines(new.females, mu20.ci[1,], lty=2, col='blue')
+lines(new.females, mu20.ci[2,], lty=2, col='blue')
 
 # m01. intercept females, log linear natural galls
 m01 = mle2(galls2011 ~ dnbinom(mu = exp(a + b * natural.galls) * I, size=s),
@@ -78,7 +154,7 @@ m10size = mle2(galls2011 ~ dnbinom( mu = exp(a + b * volume) * females, size=s )
 	start = list(a = 0.5, b=0, s=0.4), data = d)
 
 AICctab(m00, m10, m20, m01, m11, m21, m02, 
-	m12, m22, m1b, m00size, m10size)
+	m12, m22, m1b, m00size, m10size, weights=TRUE)
 BICtab(m00, m10, m20, m01, m11, m21, m02, 
 	m12, m22, m1b, m00size, m10size, weights=TRUE, nobs=30)
 

@@ -35,7 +35,7 @@ p1 = ggplot(data = d, aes(x = females, y = galls2011)) +
 	opts( panel.grid.minor = theme_blank(), panel.grid.major = theme_blank()) # remove gridlines
 				
 # now add a smoother with confidence interval, methods include loess, lm, glm (family='poisson')
-p1.smooth = p1 + stat_smooth(method = 'lm', colour='royalblue') 
+p1.smooth = p1 + stat_smooth(method = 'lm', colour='royalblue') + geom_abline(intercept=0, slope=coef(m10)['R'])
 p1.smooth
 # save plot as pdf
 ggsave('~/Documents/Analysis repos/Eutreta-diana-density-quality-experiment/figs/galls~females_lm.pdf', 
