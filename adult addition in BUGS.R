@@ -5,6 +5,7 @@ library(rjags)
 library(R2jags)
 library(R2WinBUGS)
 
+# loop for power sim
 save = data.frame(R.lower=0, R.upper=0, p.lower=0, p.upper=0)
 
 for(i in 1:100){
@@ -58,7 +59,7 @@ mrj = jags.model('adult-addition.txt', data, inits, n.chains=1,
 	n.adapt=1000)
 
 # burn in
-update(mrjc, 1000)
+update(mrj, 1000)
 
 # take MCMC samples
 orj = coda.samples(mrj, parms, n.iter=ni)
